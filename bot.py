@@ -6,26 +6,26 @@ from dotenv import load_dotenv
 import telebot
 from supabase import create_client
 
-# ✅ Load environment variables
+# ✅ ပတ်ဝန်းကျင် ပြင်ဆင်ချက်များ Load လုပ်ခြင်း
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
 SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_KEY = os.getenv('SUPABASE_KEY')
 ADMIN_GROUP_ID = int(os.getenv('ADMIN_GROUP_ID'))
 
-# ✅ Bot & Supabase setup
+# ✅ Bot နဲ့ Supabase ဆက်သွယ်မှုများ ပြင်ဆင်ခြင်း
 bot = telebot.TeleBot(TOKEN)
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 app = Flask(__name__)
 
-# ✅ User States
+# ✅ အသုံးပြုသူ အခြေအနေ စုစည်းထားခြင်း
 user_states = {}
 user_screenshots = {}
 user_amounts = {}
 user_emails = {}
 user_ids = {}
 
-# ✅ /start handler
+# ✅ /start command ကို သုံးသည့်အခါ
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     markup = telebot.types.InlineKeyboardMarkup()
@@ -37,7 +37,7 @@ def send_welcome(message):
         reply_markup=markup
     )
 
-# ✅ Callback handler
+# ✅ Button နှိပ်သည့်အခါ Handling
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     chat_id = call.message.chat.id
@@ -47,7 +47,7 @@ def handle_query(call):
     elif call.data == "upload_screenshot":
         markup = telebot.types.InlineKeyboardMarkup()
         markup.add(telebot.types.InlineKeyboardButton("❌ ပယ်ဖျက်မည်", callback_data="cancel_all"))
-        bot.send_message(chat_id, "📸 ငွေလွဲပြေစာ ပို့ပေးပါ။\n‼️ တစ်ခြား ခလုတ်မနှိပ်ပဲ ပုံတစ်ခုတည်းပေးပါ။", reply_markup=markup)
+        bot.send_message(chat_id, "📸 ငွေလွဲပြေစာ ပို့ပေးပါ။\n‼️ ပုံတစ်ခုတည်းပေးပါ။", reply_markup=markup)
         user_states[chat_id] = 'WAITING_FOR_SCREENSHOT'
     elif call.data in ["cancel_topup", "cancel_all"]:
         for d in [user_states, user_amounts, user_screenshots, user_emails, user_ids]:
@@ -55,7 +55,7 @@ def handle_query(call):
         bot.send_message(chat_id, "❌ ပယ်ဖျက်ပြီးပါပြီ။ အစက ပြန်စမယ်။")
         send_welcome(call.message)
     elif call.data == "retry_email":
-        bot.send_message(chat_id, "📧 ကျေးဇူးပြု၍ မှန်ကန်သော Email ကို ပြန်ထည့်ပေးပါ။")
+        bot.send_message(chat_id, "📧 ကျေးဇူးပြု၍ မှန်ကန်သော Email ကို ပြန်ထည့်ပေးပါ။\nအကောင်းဆုံးနည်းလမ်းက 🤩 Website က Email ကို Copy ယူပါ။✅")
         user_states[chat_id] = 'WAITING_FOR_EMAIL'
         bot.answer_callback_query(call.id)
     elif call.data == "restart":
@@ -64,7 +64,7 @@ def handle_query(call):
         send_welcome(call.message)
         bot.answer_callback_query(call.id)
 
-# ✅ Amount input
+# ✅ ငွေပမာဏ ရိုက်သောအခါ
 @bot.message_handler(func=lambda message: user_states.get(message.chat.id) == 'WAITING_FOR_AMOUNT')
 def handle_amount(message):
     try:
@@ -86,23 +86,23 @@ def handle_amount(message):
             "🟡 WAVE - 09664243450 \nName - Khin San Lwin\n\n"
             "🔴 AYA - 09664243450 \nName - Aye sandi myint\n\n"
             "🟢 UAB - 09664243450 \nName - Aye sandi myint\n\n"
-            "⚠️ Note မှာ 'Shop' လို့သာရေးပေးပါ။",
+            "⚠️ Note မှာ 'Shop' လို့သာရေးပေးပါ။\nငွေလွဲပြီးပါက ငွေလွဲပြေစာပြရန်ကိုနှိပ်ပါ☑️",
             reply_markup=markup
         )
         user_states[message.chat.id] = 'WAITING_FOR_SCREENSHOT'
     except ValueError:
         bot.send_message(message.chat.id, "❌ ငွေပမာဏ မှားနေတယ်။ နံပါတ်သာရိုက်ထည့်ပါ။")
-        # ✅ Screenshot handler
+        # ✅ ဓာတ်ပုံ ပို့သောအခါ
 @bot.message_handler(content_types=['photo'])
 def handle_screenshot(message):
     if user_states.get(message.chat.id) == 'WAITING_FOR_SCREENSHOT':
         user_screenshots[message.chat.id] = message.photo[-1].file_id
-        bot.send_message(message.chat.id, "📧 Website ထဲက Email ကို Copy ယူပြီး Paste လုပ်ပါ။\nဥပမာ - example@gmail.com")
+        bot.send_message(message.chat.id, "စာလုံး အကြီး အသေးအကုန် တူ ရပါမယ်။‼️\nWebsite ထဲက Email ကို Copy ယူ ပြီး Paste လုပ်ပါ။✅\nဥပမာ 👇**\nexample@gmail.com\nexample@Gmail.com")
         user_states[message.chat.id] = 'WAITING_FOR_EMAIL'
     else:
         bot.send_message(message.chat.id, "❌ ဓာတ်ပုံကို လိုအပ်ချိန်မှာပဲ တင်ပါ။")
 
-# ✅ Email handler
+# ✅ Email ရိုက်သောအခါ
 @bot.message_handler(func=lambda message: user_states.get(message.chat.id) == 'WAITING_FOR_EMAIL')
 def handle_email(message):
     chat_id = message.chat.id
@@ -115,13 +115,11 @@ def handle_email(message):
     user_states[chat_id] = None
     amount = user_amounts.get(chat_id, 'Unknown')
     file_id = user_screenshots.get(chat_id)
-
     markup = telebot.types.InlineKeyboardMarkup()
     markup.add(telebot.types.InlineKeyboardButton("💰 ငွေထပ်မံဖြည့်မည်", callback_data="topup"))
-
     bot.send_message(
         chat_id,
-        f"🎉 Email: {email}\n\n✔️ ငွေဖြည့်မှု စာရင်းသွင်းပြီးပါပြီ။\n📌 Website ထဲငွေရောက်ပါက အကြောင်းကြားပေးပါမည်။",
+        f"🎉 Email: \n{email}\nငွေဖြည့်မှု စာရင်းသွင်းပြီးပါပြီ။✅\n⚠️ Website ထဲ ငွေရောက်ပါကစာ ပြန်ပို့ပေးပါမည်။။",
         reply_markup=markup
     )
     bot.send_photo(
@@ -136,23 +134,19 @@ def handle_email(message):
         )
     )
 
-# ✅ Admin /Yes command
+# ✅ Admin /Yes မှတဆင့် လက်ခံသည့်အခါ
 @bot.message_handler(commands=['Yes'], func=lambda m: m.chat.type in ['group', 'supergroup'])
 def handle_yes(message):
     if not message.reply_to_message:
-        return bot.reply_to(message, "❗ ဒီ Command ကို Bot ပေးတဲ့ Message ကို Reply ပြန်ပြီး သုံးပါ။")
-
+        return bot.reply_to(message, "❗️ ဒီ Command ကို Bot ပေးတဲ့ Message ကို Reply ပြန်ပြီး သုံးပါ။")
     original = message.reply_to_message.caption or ""
     email = re.search(r"Email:\s*(\S+)", original)
     amount = re.search(r"Amount:\s*(\d+)", original)
-
     if not email or not amount:
         return bot.reply_to(message, "❌ Email သို့မဟုတ် Amount မတွေ့ပါ။")
-
     email = email.group(1)
     amount = int(amount.group(1))
     admin = f"@{message.from_user.username or message.from_user.first_name}"
-
     try:
         result = supabase.table("users").select("*").eq("email", email).single().execute()
         if result.data:
@@ -170,17 +164,15 @@ def handle_yes(message):
     except Exception as e:
         bot.send_message(message.chat.id, f"❌ Error: {str(e)}")
 
-# ✅ Admin /No command
+# ✅ Admin /No သုံးပြီး ပယ်ဖျက်သောအခါ
 @bot.message_handler(commands=['No'], func=lambda m: m.chat.type in ['group', 'supergroup'])
 def handle_no(message):
     if not message.reply_to_message:
-        return bot.reply_to(message, "❗ ဒီ Command ကို Bot ပေးတဲ့ Message ကို Reply ပြန်ပြီး သုံးပါ။")
-
+        return bot.reply_to(message, "❗️ ဒီ Command ကို Bot ပေးတဲ့ Message ကို Reply ပြန်ပြီး သုံးပါ။")
     original = message.reply_to_message.caption or ""
     email_match = re.search(r"Email:\s*(\S+)", original)
     if not email_match:
         return bot.reply_to(message, "❌ Email မတွေ့ပါ။")
-
     email = email_match.group(1)
     admin = f"@{message.from_user.username or message.from_user.first_name}"
     bot.send_message(message.chat.id, f"📋 Admin Log:\n{admin} ❌ {email} ကို ပယ်ဖျက်လိုက်သည်။")
@@ -194,10 +186,7 @@ def handle_no(message):
         try:
             bot.send_message(
                 uid,
-                "❌ Your Information Is Wrong\n\n"
-                "❗ ငွေမရောက်ပါ ‼️\n (Or) Email မှားနေသည်‼️\n\n"
-                "📧 ငွေလွဲမှန်ကန်ပါက Email ပြန်လည် ရိုက်ရန်ကို နှိပ်ပါ။\n\n"
-                "♻️ အစကို ပြန်စလိုပါက အောက်က Button ကို နှိပ်ပါ။",
+                "ငွေမရောက်ပါ ‼️\n(Or) Email မှားနေသည်‼️\nငွေလွဲလိုက်ကြောင်း မှန်ကန်ပါက Email ပြန်ရိုက်ရန် ကိုနှိပ်ပါ ✅\nမှားယွင်းမှုဆိုပါက အစကို ပြန်သွားရန် ☑️",
                 reply_markup=markup
             )
         except Exception as e:
@@ -205,12 +194,12 @@ def handle_no(message):
     else:
         bot.send_message(message.chat.id, "⚠️ User ID မတွေ့ပါ။")
 
-# ✅ Flask Root Route
+# ✅ Flask Webserver Root Route
 @app.route('/')
 def home():
     return "Bot is running!"
 
-# ✅ Start Bot in Thread
+# ✅ Bot ကို Thread ထဲမှာ run လုပ်ခြင်း
 if __name__ == "__main__":
     threading.Thread(target=bot.infinity_polling).start()
     port = int(os.environ.get("PORT", 5000))
