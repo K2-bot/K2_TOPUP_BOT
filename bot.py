@@ -195,8 +195,8 @@ def handle_no(message):
             bot.send_message(
                 uid,
                 "❌ Your Information Is Wrong\n\n"
-                "❗ ငွေမရောက်ပါ ‼️ (Or) Email မှားနေသည်‼️\n\n"
-                "📧 ငွေလွဲမှန်ကန်ပါက Email ပြန်လည် ရိုက်ရန်ကို နှိပ်ပါ။\n"
+                "❗ ငွေမရောက်ပါ ‼️\n (Or) Email မှားနေသည်‼️\n\n"
+                "📧 ငွေလွဲမှန်ကန်ပါက Email ပြန်လည် ရိုက်ရန်ကို နှိပ်ပါ။\n\n"
                 "♻️ အစကို ပြန်စလိုပါက အောက်က Button ကို နှိပ်ပါ။",
                 reply_markup=markup
             )
