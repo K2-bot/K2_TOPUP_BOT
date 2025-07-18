@@ -118,7 +118,7 @@ def handle_query(call):
     if call.data == "topup":
         bot.send_message(chat_id, "💰 ငွေဖြည့်သွင်းမည့် ပမာဏ ကိုရေးပါ\n\n1000 Ks အနည်းဆုံးဖြစ်ရပါမယ်။")
         user_states[chat_id] = 'WAITING_FOR_AMOUNT'
-        elif call.data == "upload_screenshot":
+    elif call.data == "upload_screenshot":
         markup = telebot.types.InlineKeyboardMarkup()
         markup.add(telebot.types.InlineKeyboardButton("❌ ပယ်ဖျက်မည်", callback_data="cancel_all"))
         bot.send_message(chat_id, "📸 ငွေလွဲပြေစာ ပို့ပေးပါ။\n\n‼️ ပုံတစ်ခုတည်းပေးပါ။", reply_markup=markup)
