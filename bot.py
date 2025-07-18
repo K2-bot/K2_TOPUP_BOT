@@ -119,7 +119,7 @@ def handle_email(message):
     markup.add(telebot.types.InlineKeyboardButton("💰 ငွေထပ်မံဖြည့်မည်", callback_data="topup"))
     bot.send_message(
         chat_id,
-        f"🎉 Email: \n{email}\n\nငွေဖြည့်မှု စာရင်းသွင်းပြီးပါပြီ။✅\\nn⚠️ Website ထဲ ငွေရောက်ပါကစာ ပြန်ပို့ပေးပါမည်။။",
+        f"🎉 Email: \n{email}\n\nငွေဖြည့်မှု စာရင်းသွင်းပြီးပါပြီ။✅\n\n⚠️ Website ထဲ ငွေရောက်ပါကစာပြန်ပို့ပေးပါမည်။။",
         reply_markup=markup
     )
     bot.send_photo(
