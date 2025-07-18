@@ -38,16 +38,17 @@ user_amounts = {}
 user_emails = {}
 user_ids = {}
 
-# ✅ In-memory banned users set
+# ✅ In-memory banned users set (store lowercase usernames)
 banned_users = set()
 
-# ================================
+# ===============================
 # /start command
-# ================================
+# ===============================
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     chat_id = message.chat.id
-    if chat_id in banned_users:
+    username = (message.from_user.username or "").lower()
+    if username in banned_users:
         bot.send_message(chat_id, "⚠️ သင်သည် Bot ကိုအသုံးပြုခွင့် မရှိပါ။")
         return
 
@@ -60,29 +61,64 @@ def send_welcome(message):
         reply_markup=markup
     )
 
-# ================================
-# /ID command - သုံးသူ ID ပြန်ပေးမယ့် handler
-# ================================
-@bot.message_handler(commands=['ID'])
-def handle_id_command(message):
-    user = message.from_user
-    bot.reply_to(message, f"👤 သင့် ID: {user.id}\nUsername: @{user.username or 'မရှိသေးပါ'}", parse_mode='Markdown')
+# ===============================
+# /Ban command - username နဲ့ Ban
+# ===============================
+@bot.message_handler(commands=['Ban'])
+def handle_ban(message):
+    if message.chat.id != ADMIN_GROUP_ID:
+        return
+    parts = message.text.split()
+    if len(parts) < 2:
+        bot.reply_to(message, "Usage: /Ban @username")
+        return
 
-# ================================
+    identifier = parts[1]
+    if identifier.startswith('@'):
+        username = identifier[1:].lower()
+        banned_users.add(username)
+        bot.reply_to(message, f"✅ @{username} ကို Ban လုပ်ပြီးပါပြီ။")
+    else:
+        bot.reply_to(message, "❌ Username ကို @ ပါထည့်ပြီး ရိုက်ပါ။\nUsage: /Ban @username")
+
+# ===============================
+# /Unban command - username နဲ့ Unban
+# ===============================
+@bot.message_handler(commands=['Unban'])
+def handle_unban(message):
+    if message.chat.id != ADMIN_GROUP_ID:
+        return
+    parts = message.text.split()
+    if len(parts) < 2:
+        bot.reply_to(message, "Usage: /Unban @username")
+        return
+
+    identifier = parts[1]
+    if identifier.startswith('@'):
+        username = identifier[1:].lower()
+        if username in banned_users:
+            banned_users.remove(username)
+            bot.reply_to(message, f"✅ @{username} ကို Unban လုပ်ပြီးပါပြီ။")
+        else:
+            bot.reply_to(message, f"❌ @{username} သည် Ban လုပ်ထားမှု မရှိပါ။")
+    else:
+        bot.reply_to(message, "❌ Username ကို @ ပါထည့်ပြီး ရိုက်ပါ။\nUsage: /Unban @username")
+
+# ===============================
 # Handle button presses
-# ================================
+# ===============================
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     chat_id = call.message.chat.id
-    if chat_id in banned_users:
+    username = (call.from_user.username or "").lower()
+    if username in banned_users:
         bot.answer_callback_query(call.id, "⚠️ သင်သည် Bot ကိုအသုံးပြုခွင့် မရှိပါ။")
         return
 
     if call.data == "topup":
         bot.send_message(chat_id, "💰 ငွေဖြည့်သွင်းမည့် ပမာဏ ကိုရေးပါ\n\n1000 Ks အနည်းဆုံးဖြစ်ရပါမယ်။")
         user_states[chat_id] = 'WAITING_FOR_AMOUNT'
-
-    elif call.data == "upload_screenshot":
+        elif call.data == "upload_screenshot":
         markup = telebot.types.InlineKeyboardMarkup()
         markup.add(telebot.types.InlineKeyboardButton("❌ ပယ်ဖျက်မည်", callback_data="cancel_all"))
         bot.send_message(chat_id, "📸 ငွေလွဲပြေစာ ပို့ပေးပါ။\n\n‼️ ပုံတစ်ခုတည်းပေးပါ။", reply_markup=markup)
@@ -104,9 +140,9 @@ def handle_query(call):
 
     bot.answer_callback_query(call.id)
 
-# ================================
+# ===============================
 # Handle amount input
-# ================================
+# ===============================
 @bot.message_handler(func=lambda message: user_states.get(message.chat.id) == 'WAITING_FOR_AMOUNT')
 def handle_amount(message):
     chat_id = message.chat.id
@@ -139,9 +175,9 @@ def handle_amount(message):
     except ValueError:
         bot.send_message(chat_id, "❌ ငွေပမာဏ မှားနေတယ်။ နံပါတ်သာရိုက်ထည့်ပါ။")
 
-# ================================
+# ===============================
 # Handle screenshot
-# ================================
+# ===============================
 @bot.message_handler(content_types=['photo'])
 def handle_screenshot(message):
     chat_id = message.chat.id
@@ -161,9 +197,9 @@ def handle_screenshot(message):
     else:
         bot.send_message(chat_id, "❌ ဓာတ်ပုံကို လိုအပ်ချိန်မှာပဲ တင်ပါ။")
 
-# ================================
+# ===============================
 # Handle email input
-# ================================
+# ===============================
 @bot.message_handler(func=lambda message: user_states.get(message.chat.id) == 'WAITING_FOR_EMAIL')
 def handle_email(message):
     chat_id = message.chat.id
@@ -171,8 +207,7 @@ def handle_email(message):
     if '@' not in email:
         bot.send_message(chat_id, "❌ Email မှားနေပါတယ်။ @ ပါရမယ်။ ထပ်မံထည့်ပါ။")
         return
-
-    user_emails[chat_id] = email
+        user_emails[chat_id] = email
     user_ids[email] = chat_id
     user_states[chat_id] = None
     amount = user_amounts.get(chat_id, 'Unknown')
@@ -208,9 +243,10 @@ def handle_email(message):
             f"🆔 Telegram: @{message.from_user.username or 'N/A'}\n"
             f"❌ ဓာတ်ပုံမပါရှိပါ။"
         )
-# ================================
+
+# ===============================
 # Admin accepts top-up
-# ================================
+# ===============================
 @bot.message_handler(commands=['Yes'], func=lambda m: m.chat.type in ['group', 'supergroup'])
 def handle_yes(message):
     if not message.reply_to_message:
@@ -242,9 +278,9 @@ def handle_yes(message):
     except Exception as e:
         bot.send_message(message.chat.id, f"❌ Error: {str(e)}")
 
-# ================================
+# ===============================
 # Admin rejects top-up
-# ================================
+# ===============================
 @bot.message_handler(commands=['No'], func=lambda m: m.chat.type in ['group', 'supergroup'])
 def handle_no(message):
     if not message.reply_to_message:
@@ -261,8 +297,8 @@ def handle_no(message):
     if uid:
         markup = telebot.types.InlineKeyboardMarkup()
         markup.add(
-            telebot.types.InlineKeyboardButton("📧 Email ပြန်ရိုက်ရန်", callback_data="retry_email"),
-            telebot.types.InlineKeyboardButton("🔄 အစကိုပြန်သွားရန် /start ကိုနှိပ်ပါ။ ✅", callback_data="restart")
+            telebot.types.InlineKeyboardButton("📧 Email ပြန်ရိုက်ရန်", callback_data="retry_email"),\
+        telebot.types.InlineKeyboardButton("🔄 အစကိုပြန်သွားရန် /start ကိုနှိပ်ပါ။ ✅", callback_data="restart")
         )
         try:
             bot.send_message(
@@ -275,14 +311,17 @@ def handle_no(message):
     else:
         bot.send_message(message.chat.id, "⚠️ User ID မတွေ့ပါ။")
 
-# ================================
-# Flask
-# ================================
+# ===============================
+# Flask home route
+# ===============================
 @app.route('/')
 def home():
     return "Bot is running!"
 
+# ===============================
+# Start bot polling and flask app
+# ===============================
 if __name__ == "__main__":
-    threading.Thread(target=bot.infinity_polling).start()
+    threading.Thread(target=bot.infinity_polling, name="BotPolling").start()
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
