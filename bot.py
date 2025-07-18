@@ -16,7 +16,7 @@ ADMIN_GROUP_ID = int(os.getenv('ADMIN_GROUP_ID'))
 # ✅ Bot နဲ့ Supabase ဆက်သွယ်မှုများ ပြင်ဆင်ခြင်း
 bot = telebot.TeleBot(TOKEN)
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-app = Flask(name)
+app = Flask(__name__)
 
 # ✅ အသုံးပြုသူ အခြေအနေ စုစည်းထားခြင်း
 user_states = {}
@@ -200,7 +200,7 @@ def home():
     return "Bot is running!"
 
 # ✅ Bot ကို Thread ထဲမှာ run လုပ်ခြင်း
-if name == "main":
+if __name__ == "__main__":
     threading.Thread(target=bot.infinity_polling).start()
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
