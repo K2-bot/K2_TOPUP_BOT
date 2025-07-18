@@ -16,7 +16,7 @@ ADMIN_GROUP_ID = int(os.getenv('ADMIN_GROUP_ID'))
 # ✅ Bot နဲ့ Supabase ဆက်သွယ်မှုများ ပြင်ဆင်ခြင်း
 bot = telebot.TeleBot(TOKEN)
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-app = Flask(__name__)
+app = Flask(name)
 
 # ✅ အသုံးပြုသူ အခြေအနေ စုစည်းထားခြင်း
 user_states = {}
@@ -33,7 +33,7 @@ def send_welcome(message):
     markup.add(telebot.types.InlineKeyboardButton("💰 ငွေဖြည့်သွင်းမည်", callback_data="topup"))
     bot.send_message(
         message.chat.id,
-        "K2 ငွေဖြည့်သွင်းစနစ်မှ ကြိုဆိုပါတယ်။\n\nငွေမသွင်းခင် အသုံးပြုနည်းကို လေ့လာပါ‼️",
+        "K2 ငွေဖြည့်သွင်းစနစ်မှ ကြိုဆိုပါတယ်။\n\nငွေမသွင်းခင်အသုံးပြုနည်းကိုလေ့လာပါ‼️",
         reply_markup=markup
     )
 
@@ -47,7 +47,7 @@ def handle_query(call):
     elif call.data == "upload_screenshot":
         markup = telebot.types.InlineKeyboardMarkup()
         markup.add(telebot.types.InlineKeyboardButton("❌ ပယ်ဖျက်မည်", callback_data="cancel_all"))
-        bot.send_message(chat_id, "📸 ငွေလွဲပြေစာ ပို့ပေးပါ။\n‼️ ပုံတစ်ခုတည်းပေးပါ။", reply_markup=markup)
+        bot.send_message(chat_id, "📸 ငွေလွဲပြေစာ ပို့ပေးပါ။\n\n‼️ ပုံတစ်ခုတည်းပေးပါ။", reply_markup=markup)
         user_states[chat_id] = 'WAITING_FOR_SCREENSHOT'
     elif call.data in ["cancel_topup", "cancel_all"]:
         for d in [user_states, user_amounts, user_screenshots, user_emails, user_ids]:
@@ -55,7 +55,7 @@ def handle_query(call):
         bot.send_message(chat_id, "❌ ပယ်ဖျက်ပြီးပါပြီ။ အစက ပြန်စမယ်။")
         send_welcome(call.message)
     elif call.data == "retry_email":
-        bot.send_message(chat_id, "📧 ကျေးဇူးပြု၍ မှန်ကန်သော Email ကို ပြန်ထည့်ပေးပါ။\nအကောင်းဆုံးနည်းလမ်းက 🤩 Website က Email ကို Copy ယူပါ။✅")
+        bot.send_message(chat_id, "📧 ကျေးဇူးပြု၍ မှန်ကန်သော Email ကို ပြန်ထည့်ပေးပါ။\n\nအကောင်းဆုံးနည်းလမ်းက 🤩 Website က Email ကို Copy ယူပါ။✅")
         user_states[chat_id] = 'WAITING_FOR_EMAIL'
         bot.answer_callback_query(call.id)
     elif call.data == "restart":
@@ -70,23 +70,23 @@ def handle_amount(message):
     try:
         amount = int(message.text)
         if amount < 1000:
-            bot.send_message(message.chat.id, "❌ 1000 Ks ထက်ကြီးတဲ့ ငွေပမာဏထည့်ပါ။")
+            bot.send_message(message.chat.id, "❌ 1000 Ks နှင့်အထက်များတဲ့ ငွေပမာဏထည့်ပါ။")
             return
         user_amounts[message.chat.id] = amount
         markup = telebot.types.InlineKeyboardMarkup()
         markup.add(
-            telebot.types.InlineKeyboardButton("📤 ငွေလွဲပြေစာပြရန်", callback_data="upload_screenshot"),
+            telebot.types.InlineKeyboardButton("✅ ငွေလွဲပြေစာပြရန်", callback_data="upload_screenshot"),
             telebot.types.InlineKeyboardButton("❌ ပယ်ဖျက်သည်", callback_data="cancel_all")
         )
         bot.send_message(
             message.chat.id,
             f"✅ {amount} Ks ထည့်မည်ဖြစ်သည်။\n\n"
-            "💳 ငွေထည့်ရန်အချက်အလက်:\n\n"
+            "💳 ငွေလွဲရန်အချက်အလက်:\n\n"
             "🔵 KPAY - 09691706633 \nName - Aye Sandi Myint\n\n"
             "🟡 WAVE - 09664243450 \nName - Khin San Lwin\n\n"
             "🔴 AYA - 09664243450 \nName - Aye sandi myint\n\n"
             "🟢 UAB - 09664243450 \nName - Aye sandi myint\n\n"
-            "⚠️ Note မှာ 'Shop' လို့သာရေးပေးပါ။\nငွေလွဲပြီးပါက ငွေလွဲပြေစာပြရန်ကိုနှိပ်ပါ☑️",
+            "⚠️ Note မှာ 'Shop' လို့သာရေးပေးပါ။\n\nငွေလွဲပြီးပါက‌ငွေလွဲပြေစာပြရန်ကိုနှိပ်ပါ☑️\n\n ငွေလွဲပြီး 15Minutes အတွင်းပို့ပေးဖို့အကြံပေးပါတယ်။ ",
             reply_markup=markup
         )
         user_states[message.chat.id] = 'WAITING_FOR_SCREENSHOT'
@@ -97,7 +97,7 @@ def handle_amount(message):
 def handle_screenshot(message):
     if user_states.get(message.chat.id) == 'WAITING_FOR_SCREENSHOT':
         user_screenshots[message.chat.id] = message.photo[-1].file_id
-        bot.send_message(message.chat.id, "စာလုံး အကြီး အသေးအကုန် တူ ရပါမယ်။‼️\nWebsite ထဲက Email ကို Copy ယူ ပြီး Paste လုပ်ပါ။✅\nဥပမာ 👇**\nexample@gmail.com\nexample@Gmail.com")
+        bot.send_message(message.chat.id, "စာလုံး အကြီး အသေးအကုန် တူ ရပါမယ်။‼️\n\nWebsite ထဲက Email ကို Copy ယူ ပြီး Paste လုပ်ပါ။✅\n\nဥပမာ 👇\nexample@gmail.com\nexample@Gmail.com")
         user_states[message.chat.id] = 'WAITING_FOR_EMAIL'
     else:
         bot.send_message(message.chat.id, "❌ ဓာတ်ပုံကို လိုအပ်ချိန်မှာပဲ တင်ပါ။")
@@ -119,7 +119,7 @@ def handle_email(message):
     markup.add(telebot.types.InlineKeyboardButton("💰 ငွေထပ်မံဖြည့်မည်", callback_data="topup"))
     bot.send_message(
         chat_id,
-        f"🎉 Email: \n{email}\nငွေဖြည့်မှု စာရင်းသွင်းပြီးပါပြီ။✅\n⚠️ Website ထဲ ငွေရောက်ပါကစာ ပြန်ပို့ပေးပါမည်။။",
+        f"🎉 Email: \n{email}\n\nငွေဖြည့်မှု စာရင်းသွင်းပြီးပါပြီ။✅\\nn⚠️ Website ထဲ ငွေရောက်ပါကစာ ပြန်ပို့ပေးပါမည်။။",
         reply_markup=markup
     )
     bot.send_photo(
@@ -173,7 +173,7 @@ def handle_no(message):
     email_match = re.search(r"Email:\s*(\S+)", original)
     if not email_match:
         return bot.reply_to(message, "❌ Email မတွေ့ပါ။")
-    email = email_match.group(1)
+        email = email_match.group(1)
     admin = f"@{message.from_user.username or message.from_user.first_name}"
     bot.send_message(message.chat.id, f"📋 Admin Log:\n{admin} ❌ {email} ကို ပယ်ဖျက်လိုက်သည်။")
     uid = user_ids.get(email)
@@ -186,7 +186,7 @@ def handle_no(message):
         try:
             bot.send_message(
                 uid,
-                "ငွေမရောက်ပါ ‼️\n(Or) Email မှားနေသည်‼️\nငွေလွဲလိုက်ကြောင်း မှန်ကန်ပါက Email ပြန်ရိုက်ရန် ကိုနှိပ်ပါ ✅\nမှားယွင်းမှုဆိုပါက အစကို ပြန်သွားရန် ☑️",
+                "ငွေမရောက်ပါ ‼️\n(Or)\n Email မှားနေသည်‼️\n\nငွေလွဲလိုက်ကြောင်း မှန်ကန်ပါက Email ပြန်ရိုက်ရန် ကိုနှိပ်ပါ ✅\n\nမှားလုပ်မိပါကအစကိုပြန်သွားရန် ☑️",
                 reply_markup=markup
             )
         except Exception as e:
@@ -200,7 +200,7 @@ def home():
     return "Bot is running!"
 
 # ✅ Bot ကို Thread ထဲမှာ run လုပ်ခြင်း
-if __name__ == "__main__":
+if name == "main":
     threading.Thread(target=bot.infinity_polling).start()
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
